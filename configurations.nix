@@ -25,6 +25,7 @@
       diskSize = "30G";
       copyIsoFromStore = true;
       networkType = "user";
+      graphics = "vnc";
     };
 
     "nn" = {

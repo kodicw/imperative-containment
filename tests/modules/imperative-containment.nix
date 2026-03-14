@@ -121,6 +121,11 @@ let
           default = "sdb";
           description = "Device name for CDROM";
         };
+        graphics = lib.mkOption {
+          type = lib.types.enum [ "console" "vnc" "spice" "none" ];
+          default = "console";
+          description = "Display type: console (serial), vnc, spice, or none";
+        };
         hostBridge = lib.mkOption {
           type = lib.types.str;
           default = "br0";
@@ -338,6 +343,16 @@ in
             };
             readonly = true;
           };
+
+          # Graphics/Console
+          graphics = if vmCfg.graphics == "vnc" || vmCfg.graphics == "spice"
+                     then { type = vmCfg.graphics; }
+                     else if vmCfg.graphics == "console"
+                     then { type = "pty"; }
+                     else null;
+          video = if vmCfg.graphics == "vnc" || vmCfg.graphics == "spice"
+                  then { model = { type = "virtio"; }; }
+                  else null;
 
           interface = let
             baseInterface = {

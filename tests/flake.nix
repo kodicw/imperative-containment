@@ -46,6 +46,7 @@
                   diskSize = "20G";
                   copyIsoFromStore = true;
                   networkType = "bridge";
+                  graphics = "vnc";
                };
                "pci-vm" = {
                   enable = true;
