@@ -11,6 +11,20 @@
   networking.interfaces.eno1.useDHCP = false;
   networking.interfaces.br0.useDHCP = true;
 
+  # Lightweight Desktop Environment
+  services.xserver.enable = true;
+  services.displayManager.sddm.enable = true;
+  services.desktopManager.cosmic.enable = true;
+  
+  # Enable SSH
+  services.openssh.enable = true;
+
+  # User for demo
+  users.users.charles = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "libvirtd" ];
+  };
+
   # Execute the Module
   services.imperativeContainment = {
     "windows-stateful-mess" = {
