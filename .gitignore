@@ -1,0 +1,32 @@
+# Nix
+result/
+tests/result/
+*.drv
+*.out
+*.log
+
+# VM Images
+*.qcow2
+*.qcow
+*.img
+*.raw
+
+# ISOs (large binary files)
+*.iso
+windows_isos/
+alpine-3.18/
+
+# Build artifacts
+.tmp/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent files
+AGENTS.md
