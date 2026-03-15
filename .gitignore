@@ -1,5 +1,5 @@
 # Nix
-result/
+result
 tests/result/
 *.drv
 *.out
