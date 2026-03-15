@@ -251,7 +251,8 @@ in
           serviceConfig.RemainAfterExit = true;
           serviceConfig.ExecStart = "${pkgs.libvirt}/bin/virsh autostart ${vmName}";
           wantedBy = [ "multi-user.target" ];
-          after = [ "libvirtd.service" ];
+          after = [ "libvirtd.service" "nixvirt.service" ];
+          wants = [ "nixvirt.service" ];
         };
       }
     ) { } (lib.mapAttrsToList (n: v: { name = n; value = v; }) cfg);
