@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  windowsIsoPath,
   ...
 }:
 
@@ -61,10 +60,11 @@
       cores = 2;
       pinOffset = 2;
       memoryMiB = 2048;
-      isoPath = windowsIsoPath;
+      # Note: Point this to your actual local ISO path
+      isoPath = "/home/charles/code/nix/imperative-containment/windows_isos/SERVER_EVAL_x64FRE_en-us.iso";
       createDiskIfMissing = true;
       diskSize = "30G";
-      copyIsoFromStore = true;
+      copyIsoFromStore = false; # Set to false to use local path directly
       networkType = "user";
       graphics = "spice";
     };

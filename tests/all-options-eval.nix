@@ -55,6 +55,7 @@ pkgs.testers.runNixOSTest {
             isoPath = null; # Windows VM with null isoPath gets virtio-win cdrom
             arch = "x86_64";
             cpuMode = "host-model";
+            restartOnCrash = false;
           };
           
           test-vm-linux-copy = {
@@ -98,6 +99,7 @@ pkgs.testers.runNixOSTest {
     assert "dev='sda'" in xml_full, "Disk dev mismatch"
     assert "type='spice'" in xml_full, "Graphics mismatch"
     assert "bridge='dummybr0'" in xml_full, "Bridge mismatch"
+    assert "<on_crash>destroy</on_crash>" in xml_full, "Crash action mismatch (should be destroy since configured to false)"
     
     # Check PCI passthrough translation (00:1f.3 -> bus 0, slot 31 (0x1f), function 3)
     assert "domain='0x0000' bus='0x00' slot='0x1f' function='0x3'" in xml_full, "PCI passthrough 1 mismatch"
@@ -116,6 +118,7 @@ pkgs.testers.runNixOSTest {
     assert "type='vnc'" in xml_linux, "Graphics mismatch"
     assert "type='user'" in xml_linux, "Network user mismatch"
     assert "<hyperv>" not in xml_linux, "Hyper-V features should not be present for Linux"
+    assert "<on_crash>restart</on_crash>" in xml_linux, "Crash action mismatch (should be default restart)"
 
     print("All module options rendered correctly in Libvirt XML!")
   '';

@@ -2,9 +2,15 @@
   pkgs,
   NixVirt,
   self,
-  windowsIsoPkg,
 }:
 
+let
+  # Create a dummy ISO for testing so we don't need a real 5GB Windows ISO in the store
+  windowsIsoPkg = pkgs.runCommand "windows-iso" { } ''
+    mkdir -p $out
+    echo "dummy iso content" > $out/SERVER_EVAL_x64FRE_en-us.iso
+  '';
+in
 pkgs.testers.runNixOSTest {
   name = "windows-vm-boot-test";
   node.specialArgs = { inherit NixVirt; };

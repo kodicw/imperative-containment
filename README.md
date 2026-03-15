@@ -2,7 +2,38 @@
 
 A NixOS Flake configuration for managing "imperative" virtual machines (VMs) using declarative Nix definitions via [NixVirt](https://github.com/AshleyYakeley/NixVirt).
 
-## Concept
+## Quick Start (The "5-Minute Host")
+
+1.  **Clone the Repo:**
+    ```bash
+    git clone https://github.com/your-repo/imperative-containment.git
+    cd imperative-containment
+    ```
+
+2.  **Copy the Example:**
+    ```bash
+    cp example-host.nix hosts/my-machine.nix
+    ```
+
+3.  **Customize:**
+    *   Edit `hosts/my-machine.nix`.
+    *   Set `isoPath` to the location of your real Windows ISO (e.g., `/home/user/isos/win.iso`).
+    *   Adjust `cores` and `memoryMiB`.
+
+4.  **Deploy:**
+    Add the module to your existing NixOS flake, or use this flake directly by adding your host to `flake.nix`.
+
+    ```nix
+    # In your flake.nix
+    nixosConfigurations.my-machine = nixpkgs.lib.nixosSystem {
+      modules = [
+        ./hosts/my-machine.nix
+        imperative-containment.nixosModules.default
+      ];
+    };
+    ```
+
+## Concepts
 
 **Imperative Containment**: Define the container (VM hardware, resources, passthrough) declaratively while accepting that the internal state (OS disk) is imperative and stateful.
 

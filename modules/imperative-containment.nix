@@ -175,6 +175,11 @@ let
           default = "host-passthrough";
           description = "CPU emulation mode";
         };
+        restartOnCrash = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Automatically restart the VM if it crashes (e.g. BSOD/Kernel Panic).";
+        };
       };
     };
 in
@@ -287,6 +292,11 @@ in
             threads = 1;
           };
         };
+        
+        on_poweroff = "destroy";
+        on_reboot = "restart";
+        on_crash = if vmCfg.restartOnCrash then "restart" else "destroy";
+
         cputune = {
           vcpupin = generateCpuPin vmCfg.cores vmCfg.pinOffset;
         };
