@@ -1,4 +1,9 @@
-{ config, pkgs, windowsIsoPath, ... }:
+{
+  config,
+  pkgs,
+  windowsIsoPath,
+  ...
+}:
 
 {
   imports = [
@@ -7,7 +12,7 @@
 
   # Network Bridge
   networking.useDHCP = false;
-  networking.bridges.br0.interfaces = [ "eno1" ];
+  networking.bridges.br0.interfaces = [ "eth0" ];
   networking.interfaces.eno1.useDHCP = false;
   networking.interfaces.br0.useDHCP = true;
 
@@ -34,6 +39,18 @@
     ];
   };
 
+  # Fix for systemd credential error (status=243/CREDENTIALS)
+  systemd.services.libvirtd.serviceConfig = {
+    LoadCredentialEncrypted = pkgs.lib.mkForce "";
+    LoadCredential = pkgs.lib.mkForce "";
+  };
+
+  # Set systemd timeout to 5s to fail fast
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "5s";
+    DefaultTimeoutStartSec = "5s";
+  };
+
   # Execute the Module
   services.imperativeContainment = {
     "windows-stateful-mess" = {
@@ -52,16 +69,16 @@
       graphics = "spice";
     };
 
-    "nn" = {
-      enable = true;
-      autostart = true;
-      osType = "linux";
-      cores = 1;
-      pinOffset = 0;
-      memoryMiB = 256;
-      networkType = "user";
-      copyDiskFromStore = true;
-    };
+    # "nn" = {
+    #   enable = true;
+    #   autostart = true;
+    #   osType = "linux";
+    #   cores = 1;
+    #   pinOffset = 0;
+    #   memoryMiB = 256;
+    #   networkType = "user";
+    #   copyDiskFromStore = true;
+    # };
   };
 
   # VM specific settings (for nixos-rebuild build-vm)

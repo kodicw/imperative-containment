@@ -39,10 +39,10 @@
       "inputs": {
         "NixVirt": "NixVirt",
         "nixpkgs": "nixpkgs",
-        "windows-iso": "windows-iso"
+        "win": "win"
       }
     },
-    "windows-iso": {
+    "win": {
       "flake": false,
       "locked": {
         "path": "./windows_isos/SERVER_EVAL_x64FRE_en-us.iso",
