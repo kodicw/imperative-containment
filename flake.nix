@@ -36,11 +36,23 @@
         };
 
       # Tests
-      packages.x86_64-linux = import ./tests {
-        inherit
-          pkgs
-          self
-          ;
+      packages.x86_64-linux = 
+        let
+          tests = import ./tests {
+            inherit
+              pkgs
+              self
+              ;
+          };
+          fetch-iso = pkgs.callPackage ./pkgs/fetch-iso.nix { 
+            inherit (pkgs) gum jq quickemu; 
+          };
+        in
+        tests // { inherit fetch-iso; };
+        
+      apps.x86_64-linux.fetch-iso = {
+        type = "app";
+        program = "${self.packages.x86_64-linux.fetch-iso}/bin/fetch-iso";
       };
 
       checks.x86_64-linux = {
