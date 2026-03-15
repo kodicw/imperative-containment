@@ -2,64 +2,82 @@
 
 A NixOS Flake configuration for managing "imperative" virtual machines (VMs) using declarative Nix definitions via [NixVirt](https://github.com/AshleyYakeley/NixVirt).
 
-## Quick Start (The "5-Minute Host")
-
-1.  **Clone the Repo:**
-    ```bash
-    git clone https://github.com/your-repo/imperative-containment.git
-    cd imperative-containment
-    ```
-
-2.  **Copy the Example:**
-    ```bash
-    cp example-host.nix hosts/my-machine.nix
-    ```
-
-3.  **Customize:**
-    *   Edit `hosts/my-machine.nix`.
-    *   Set `isoPath` to the location of your real Windows ISO (e.g., `/home/user/isos/win.iso`).
-    *   Adjust `cores` and `memoryMiB`.
-
-4.  **Deploy:**
-    Add the module to your existing NixOS flake, or use this flake directly by adding your host to `flake.nix`.
-
-    ```nix
-    # In your flake.nix
-    nixosConfigurations.my-machine = nixpkgs.lib.nixosSystem {
-      modules = [
-        ./hosts/my-machine.nix
-        imperative-containment.nixosModules.default
-      ];
-    };
-    ```
-
-## Concepts
-
-**Imperative Containment**: Define the container (VM hardware, resources, passthrough) declaratively while accepting that the internal state (OS disk) is imperative and stateful.
+This project fills the gap between "pure declarative" microVMs (which can't easily run Windows games) and "pure imperative" manual setups (virt-manager). It gives you **Declarative Hardware** (RAM, CPU, PCI Passthrough, TPM) with **Imperative State** (the disk image).
 
 ## Features
 
-- Declarative VM configuration with NixVirt
-- Auto-creation of disk images at boot
-- Copy-on-write disk images from nix store to tmpfs
-- PCI passthrough support
-- TPM support (for Windows)
-- CPU pinning
-- Nested VM support
+- **Batteries Included:** Automatically handles Libvirt, QEMU, and NixVirt dependencies. No complex `specialArgs` wiring required.
+- **Interactive ISO Downloader:** Built-in tool to easily fetch Windows/Linux ISOs (`nix run .#fetch-iso`).
+- **Production Ready:** Handles systemd credential issues, race conditions, and automatic restart on crash (BSOD/Kernel Panic).
+- **Windows Optimized:** Pre-configured Hyper-V enlightenments, TPM 2.0 support, and virtio drivers.
+- **Hardware Passthrough:** Easy PCI passthrough and CPU pinning configuration.
 
-## Usage
+## Quick Start
+
+### 1. Get Installation Media
+Don't have a Windows ISO? We've got you covered.
 
 ```bash
-# Build the system
-nix build .#nixosConfigurations.demo-host.config.system.build.toplevel
+# Search, download, and clean up ISOs interactively
+nix run github:kodicw/imperative-containment#fetch-iso
+```
+*Follow the prompts to download your desired OS (e.g., "windows 11", "ubuntu 22.04").*
 
-# Rebuild the host
-sudo nixos-rebuild switch --flake .#demo-host
+### 2. Add to Your Flake
+Add `imperative-containment` to your `flake.nix`. You **do not** need to manually import `NixVirt`; we handle that for you.
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    imperative-containment.url = "github:kodicw/imperative-containment";
+  };
+
+  outputs = { self, nixpkgs, imperative-containment, ... }: {
+    nixosConfigurations.my-machine = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        # Import the module directly
+        imperative-containment.nixosModules.default
+        
+        # Your host configuration
+        ./configuration.nix
+      ];
+    };
+  };
+}
 ```
 
-## Configuration
+### 3. Configure Your VM
+In your `configuration.nix`:
 
-See `configurations.nix` for example VM configurations.
+```nix
+{ pkgs, ... }: {
+  services.imperativeContainment = {
+    # Windows Gaming VM
+    "gaming-vm" = {
+      enable = true;
+      osType = "windows";
+      
+      # Resources
+      cores = 6;
+      memoryMiB = 16384;
+      
+      # Storage
+      createDiskIfMissing = true;
+      diskSize = "100G";
+      # Point this to the ISO you downloaded in Step 1
+      isoPath = "/var/lib/vms/windows-11.iso";
+      
+      # Graphics
+      graphics = "spice"; # or "none" for GPU passthrough
+      
+      # TPM 2.0 (Required for Windows 11)
+      enableTPM = true;
+    };
+  };
+}
+```
 
 ## Module Options
 
@@ -69,26 +87,20 @@ See `configurations.nix` for example VM configurations.
 | `osType` | enum | `"linux"` | OS type (`linux`, `windows`) |
 | `cores` | int | `4` | Number of vCPUs |
 | `memoryMiB` | int | `8192` | Memory in MiB |
-| `diskPath` | path | null | Path to disk image |
+| `diskPath` | path | null | Path to disk image (imperative state) |
 | `isoPath` | path | null | Path to ISO for installation |
-| `createDiskIfMissing` | bool | `false` | Auto-create qcow2 disk |
+| `createDiskIfMissing` | bool | `false` | Auto-create qcow2 disk if missing |
 | `diskSize` | str | `"60G"` | Size for auto-created disk |
-| `copyDiskFromStore` | bool | `false` | Copy disk from nix store |
-| `copyIsoFromStore` | bool | `false` | Copy ISO from nix store |
-| `vmsPath` | path | `/var/lib/vms` | Path for VM files |
-| `enableTPM` | bool | `false` | Enable TPM 2.0 |
-| `pciPassthrough` | list | `[]` | PCI devices to pass through |
-| `networkType` | enum | `"bridge"` | Network type (`bridge`, `user`) |
-| `arch` | enum | `"x86_64"` | VM architecture |
-| `cpuMode` | enum | `"host-passthrough"` | CPU mode |
+| `restartOnCrash` | bool | `true` | Auto-restart VM on crash/BSOD |
+| `enableTPM` | bool | `false` | Enable vTPM 2.0 (needed for Win11) |
+| `pciPassthrough` | list | `[]` | List of PCI addresses (e.g. `["01:00.0"]`) |
+| `graphics` | enum | `"console"` | Display: `spice`, `vnc`, `console`, `none` |
+| `networkType` | enum | `"bridge"` | `bridge` (LAN IP) or `user` (NAT) |
 
 ## Testing
 
-```bash
-# Run flake checks
-nix flake check
-nix flake check ./tests
+Run the integration test suite (boots VMs in a nested QEMU environment):
 
-# Build VM XML
-nix build ./tests#windows-vm-xml
+```bash
+nix flake check
 ```
