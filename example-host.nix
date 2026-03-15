@@ -11,14 +11,14 @@
   ];
 
   # 1. Enable Libvirt and KVM (Mandatory)
-  virtualisation.libvirt.enable = true;
-  virtualisation.libvirtd.enable = true;
+  # virtualisation.libvirt.enable = true; # Handled by module
+  # virtualisation.libvirtd.enable = true; # Handled by module
   
-  # 2. Fix for potential systemd 259+ credential errors
-  systemd.services.libvirtd.serviceConfig = {
-    LoadCredentialEncrypted = pkgs.lib.mkForce "";
-    LoadCredential = pkgs.lib.mkForce "";
-  };
+  # 2. Fix for potential systemd 259+ credential errors (if needed)
+  # systemd.services.libvirtd.serviceConfig = {
+  #   LoadCredentialEncrypted = pkgs.lib.mkForce "";
+  #   LoadCredential = pkgs.lib.mkForce "";
+  # };
 
   # 3. Define a bridge if you want VMs on your LAN (Optional)
   # networking.bridges.br0.interfaces = [ "eno1" ]; # Replace eno1 with your NIC

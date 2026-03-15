@@ -39,10 +39,10 @@
   };
 
   # Fix for systemd credential error (status=243/CREDENTIALS)
-  systemd.services.libvirtd.serviceConfig = {
-    LoadCredentialEncrypted = pkgs.lib.mkForce "";
-    LoadCredential = pkgs.lib.mkForce "";
-  };
+  # systemd.services.libvirtd.serviceConfig = {
+  #   LoadCredentialEncrypted = pkgs.lib.mkForce "";
+  #   LoadCredential = pkgs.lib.mkForce "";
+  # };
 
   # Set systemd timeout to 5s to fail fast
   systemd.settings.Manager = {
