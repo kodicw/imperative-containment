@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, windowsIsoPath, ... }:
 
 {
   imports = [
@@ -15,14 +15,17 @@
   services.xserver.enable = true;
   services.displayManager.sddm.enable = true;
   services.desktopManager.cosmic.enable = true;
-  
+
   # Enable SSH
   services.openssh.enable = true;
 
   # User for demo
   users.users.charles = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "libvirtd" ];
+    extraGroups = [
+      "wheel"
+      "libvirtd"
+    ];
   };
 
   # Execute the Module
@@ -34,7 +37,7 @@
       cores = 2;
       pinOffset = 2;
       memoryMiB = 2048;
-      isoPath = ./windows_isos/SERVER_EVAL_x64FRE_en-us.iso;
+      isoPath = windowsIsoPath;
       createDiskIfMissing = true;
       diskSize = "30G";
       copyIsoFromStore = true;
@@ -60,15 +63,8 @@
     ];
     virtualisation.memorySize = 8192;
     virtualisation.cores = 4;
-    virtualisation.diskSize = 61440;  # 60GB
+    virtualisation.diskSize = 61440; # 60GB
     services.getty.autologinUser = "root";
-    
-    # Disable Windows VM for build-vm (ISO not available in store)
-    services.imperativeContainment = {
-      "windows-stateful-mess" = {
-        enable = false;
-      };
-    };
   };
 
   system.stateVersion = "24.05";

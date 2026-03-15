@@ -38,8 +38,21 @@
     "root": {
       "inputs": {
         "NixVirt": "NixVirt",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "windows-iso": "windows-iso"
       }
+    },
+    "windows-iso": {
+      "flake": false,
+      "locked": {
+        "path": "./windows_isos/SERVER_EVAL_x64FRE_en-us.iso",
+        "type": "path"
+      },
+      "original": {
+        "path": "./windows_isos/SERVER_EVAL_x64FRE_en-us.iso",
+        "type": "path"
+      },
+      "parent": []
     }
   },
   "root": "root",
