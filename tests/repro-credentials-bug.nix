@@ -1,12 +1,10 @@
-{ pkgs, NixVirt, self }:
+{ pkgs, self }:
 
 pkgs.testers.runNixOSTest {
   name = "repro-credentials-bug-test";
-  node.specialArgs = { inherit NixVirt; };
   nodes = {
     machine = { config, pkgs, lib, ... }: {
       imports = [
-        NixVirt.nixosModules.default
         self.nixosModules.default
       ];
 

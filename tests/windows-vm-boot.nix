@@ -1,8 +1,4 @@
-{
-  pkgs,
-  NixVirt,
-  self,
-}:
+{ pkgs, self }:
 
 let
   # Create a dummy ISO for testing so we don't need a real 5GB Windows ISO in the store
@@ -13,7 +9,6 @@ let
 in
 pkgs.testers.runNixOSTest {
   name = "windows-vm-boot-test";
-  node.specialArgs = { inherit NixVirt; };
   nodes = {
     host =
       {
@@ -24,7 +19,6 @@ pkgs.testers.runNixOSTest {
       }:
       {
         imports = [
-          NixVirt.nixosModules.default
           self.nixosModules.default
         ];
 

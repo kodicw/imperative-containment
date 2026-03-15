@@ -1,8 +1,7 @@
-{ pkgs, NixVirt, self }:
+{ pkgs, self }:
 
 pkgs.testers.runNixOSTest {
   name = "all-options-eval-test";
-  node.specialArgs = { inherit NixVirt; };
   nodes = {
     host =
       {
@@ -13,7 +12,6 @@ pkgs.testers.runNixOSTest {
       }:
       {
         imports = [
-          NixVirt.nixosModules.default
           self.nixosModules.default
         ];
 

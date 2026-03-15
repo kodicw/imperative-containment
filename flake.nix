@@ -19,23 +19,26 @@
     {
       nixosConfigurations.demo-host = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = {
-          inherit NixVirt;
-        };
         modules = [
           self.nixosModules.default
-          NixVirt.nixosModules.default
           ./examples/demo-host/configurations.nix
         ];
       };
 
-      nixosModules.default = import ./modules/imperative-containment.nix;
+      nixosModules.default =
+        { ... }:
+        {
+          imports = [
+            NixVirt.nixosModules.default
+            ./modules/imperative-containment.nix
+          ];
+          _module.args.NixVirt = NixVirt;
+        };
 
       # Tests
       packages.x86_64-linux = import ./tests {
         inherit
           pkgs
-          NixVirt
           self
           ;
       };
