@@ -13,7 +13,13 @@
 
   # Lightweight Desktop Environment
   services.xserver.enable = true;
-  services.displayManager.sddm.enable = true;
+  services.displayManager = {
+    sddm.enable = true;
+    autoLogin = {
+      enable = true;
+      user = "root";
+    };
+  };
   services.desktopManager.cosmic.enable = true;
 
   # Enable SSH
