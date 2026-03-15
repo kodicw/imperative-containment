@@ -72,6 +72,11 @@ let
     {
       options = {
         enable = lib.mkEnableOption "Enable Contained Impurity: ${name}";
+        autostart = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Start VM automatically on host boot";
+        };
         osType = lib.mkOption {
           type = lib.types.enum [
             "windows"

@@ -38,6 +38,7 @@
   services.imperativeContainment = {
     "windows-stateful-mess" = {
       enable = true;
+      autostart = true;
       osType = "windows";
       enableTPM = false;
       cores = 2;
@@ -53,6 +54,7 @@
 
     "nn" = {
       enable = true;
+      autostart = true;
       osType = "linux";
       cores = 1;
       pinOffset = 0;

@@ -72,6 +72,11 @@ let
     {
       options = {
         enable = lib.mkEnableOption "Enable Contained Impurity: ${name}";
+        autostart = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = "Start VM automatically on host boot";
+        };
         osType = lib.mkOption {
           type = lib.types.enum [
             "windows"
@@ -218,14 +223,15 @@ in
       ]
     ) cfg);
 
-    # Generate systemd services to create disks if missing
+    # Generate systemd services for disk creation and VM autostart
     systemd.services = lib.foldl' (acc: vmPair:
       let
         vmName = vmPair.name;
         vmCfg = vmPair.value;
         effectiveDiskPath = if vmCfg.diskPath != null then vmCfg.diskPath else "${vmCfg.vmsPath}/${vmName}.qcow2";
       in
-      acc // lib.optionalAttrs vmCfg.createDiskIfMissing {
+      acc
+      // lib.optionalAttrs vmCfg.createDiskIfMissing {
         "imperative-containment-create-disk-${vmName}" = {
           serviceConfig.Type = "oneshot";
           serviceConfig.RemainAfterExit = true;
@@ -237,6 +243,15 @@ in
             fi
           '';
           wantedBy = [ "multi-user.target" ];
+        };
+      }
+      // lib.optionalAttrs vmCfg.autostart {
+        "imperative-containment-autostart-${vmName}" = {
+          serviceConfig.Type = "oneshot";
+          serviceConfig.RemainAfterExit = true;
+          serviceConfig.ExecStart = "${pkgs.libvirt}/bin/virsh autostart ${vmName}";
+          wantedBy = [ "multi-user.target" ];
+          after = [ "libvirtd.service" ];
         };
       }
     ) { } (lib.mapAttrsToList (n: v: { name = n; value = v; }) cfg);
