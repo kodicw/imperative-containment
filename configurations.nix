@@ -62,6 +62,13 @@
     virtualisation.cores = 4;
     virtualisation.diskSize = 61440;  # 60GB
     services.getty.autologinUser = "root";
+    
+    # Disable Windows VM for build-vm (ISO not available in store)
+    services.imperativeContainment = {
+      "windows-stateful-mess" = {
+        enable = false;
+      };
+    };
   };
 
   system.stateVersion = "24.05";
