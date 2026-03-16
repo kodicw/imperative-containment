@@ -361,12 +361,14 @@ in
             };
             readonly = true;
           }
-          ++ lib.optional (vmCfg.osType == "windows" && vmCfg.isoPath == null) {
+          ++ lib.optional (vmCfg.osType == "windows") {
             type = "file";
             device = "cdrom";
             source.file = "${pkgs.virtio-win}/share/virtio-win.iso";
             target = {
-              dev = vmCfg.cdromDev;
+              # If user has an ISO attached (installing), this goes to sdc.
+              # If no ISO (running), this goes to sdb.
+              dev = if vmCfg.isoPath != null then "sdc" else vmCfg.cdromDev;
               bus = "sata";
             };
             readonly = true;
