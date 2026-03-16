@@ -66,9 +66,19 @@ let
     in
     "${builtins.substring 0 8 h}-${builtins.substring 8 4 h}-${builtins.substring 12 4 h}-${builtins.substring 16 4 h}-${builtins.substring 20 12 h}";
 
+  # Generate a virtio-win.iso from the unpacked driver directory
+  # The nixpkgs virtio-win package unpacks the ISO, so we need to repack it
+  # to mount it as a CDROM.
+  virtioWinIso = pkgs.runCommand "virtio-win-iso" { 
+    nativeBuildInputs = [ pkgs.cdrtools ]; 
+  } ''
+    mkdir -p $out
+    mkisofs -o $out/virtio-win.iso -J -R ${pkgs.virtio-win}
+  '';
+
   # The VM Definition Submodule
   vmSubmodule =
-    { name, ... }:
+    { name, config, ... }:
     {
       options = {
         enable = lib.mkEnableOption "Enable Contained Impurity: ${name}";
@@ -150,6 +160,11 @@ let
           default = false;
           description = "Copy ISO image from nix store to tmpfs at boot";
         };
+        installMedia = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = "Name of OS to install (e.g. 'windows 11', 'ubuntu 22.04'). Defaults isoPath to /var/lib/vms/<name>.iso.";
+        };
         isoPath = lib.mkOption {
           type = lib.types.nullOr lib.types.path;
           default = null;
@@ -181,6 +196,11 @@ let
           description = "Automatically restart the VM if it crashes (e.g. BSOD/Kernel Panic).";
         };
       };
+      
+      config = {
+        # Default isoPath if installMedia is set
+        isoPath = lib.mkIf (config.installMedia != null) (lib.mkDefault "${config.vmsPath}/${name}.iso");
+      };
     };
 in
 {
@@ -191,6 +211,13 @@ in
   };
 
   config = lib.mkIf (cfg != { }) {
+    # Add virtio-win drivers to system packages if any Windows VM is present
+    environment.systemPackages = 
+      let
+        hasWindows = lib.any (vm: vm.osType == "windows") (lib.attrValues cfg);
+      in
+      lib.optional hasWindows virtioWinIso;
+
     boot.kernelParams =
       (let
         cpuVendor = pkgs.stdenv.hostPlatform.cpu.vendor or "unknown";
@@ -219,12 +246,21 @@ in
         effectiveDiskPath = if vmCfg.diskPath != null then vmCfg.diskPath else "${vmCfg.vmsPath}/${vmName}.qcow2";
       in
       [ ]
-      ++ lib.optionals vmCfg.copyDiskFromStore [
+      # 1. Ensure the VM directory exists
+      ++ [
         "d ${vmCfg.vmsPath} 0755 root root -"
+      ]
+      # 2. Copy disk if requested
+      ++ lib.optionals vmCfg.copyDiskFromStore [
         "C+ ${vmCfg.vmsPath}/${vmName}.qcow2 - root root - ${effectiveDiskPath}"
       ]
+      # 3. Copy ISO if requested
       ++ lib.optionals (vmCfg.isoPath != null && vmCfg.copyIsoFromStore) [
         "C+ ${vmCfg.vmsPath}/${vmName}.iso - root root - ${vmCfg.isoPath}"
+      ]
+      # 4. Copy VirtIO Drivers (Windows Only)
+      ++ lib.optionals (vmCfg.osType == "windows") [
+        "C+ ${vmCfg.vmsPath}/virtio-win.iso - root root - ${virtioWinIso}/virtio-win.iso"
       ]
     ) cfg);
 
@@ -364,7 +400,7 @@ in
           ++ lib.optional (vmCfg.osType == "windows") {
             type = "file";
             device = "cdrom";
-            source.file = "${pkgs.virtio-win}/share/virtio-win.iso";
+            source.file = "${vmCfg.vmsPath}/virtio-win.iso";
             target = {
               # If user has an ISO attached (installing), this goes to sdc.
               # If no ISO (running), this goes to sdb.

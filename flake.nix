@@ -47,8 +47,16 @@
           fetch-iso = pkgs.callPackage ./pkgs/fetch-iso.nix { 
             inherit (pkgs) gum jq quickemu; 
           };
+
+          # Create an ISO from the extracted virtio-win package
+          virtio-win-iso = pkgs.runCommand "virtio-win-iso" { 
+            nativeBuildInputs = [ pkgs.cdrtools ]; 
+          } ''
+            mkdir -p $out/share
+            mkisofs -o $out/share/virtio-win.iso -J -R ${pkgs.virtio-win}
+          '';
         in
-        tests // { inherit fetch-iso; };
+        tests // { inherit fetch-iso virtio-win-iso; };
         
       apps.x86_64-linux.fetch-iso = {
         type = "app";
